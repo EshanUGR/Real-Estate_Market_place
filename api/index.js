@@ -36,4 +36,23 @@ app.get('/test',(req,res)=>
 app.use('/api/user',userRouter);
 app.use('/api/auth',authRouter);
 
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
 
+  // Optionally log the error
+  console.error(err);
+
+  // In development, include the stack trace
+  const response = {
+    success: false,
+    statusCode,
+    message,
+  };
+
+  if (process.env.NODE_ENV === "development") {
+    response.stack = err.stack;
+  }
+
+  return res.status(statusCode).json(response);
+});
