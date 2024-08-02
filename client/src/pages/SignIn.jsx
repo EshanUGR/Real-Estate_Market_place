@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
   });
@@ -23,14 +22,14 @@ const SignIn = () => {
     setError(null);
     setSuccess(null);
 
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.email || !formData.password) {
       setError("All fields are required");
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,10 +41,10 @@ const SignIn = () => {
       if (data.success === false) {
         setError(data.message);
       } else {
-        setSuccess("Registration successful. Please sign in.");
-        setFormData({ username: "", email: "", password: "" });
+        setSuccess("Sign in successful. Redirecting...");
+        setFormData({ email: "", password: "" });
         setTimeout(() => {
-          navigate("/sign-in");
+          navigate("/"); // Redirect to the dashboard or another protected route
         }, 2000);
       }
     } catch (err) {
@@ -60,14 +59,6 @@ const SignIn = () => {
       <h1 className="text-3xl font-semibold text-center my-7">Sign In</h1>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          className="p-3 border rounded-lg"
-          id="username"
-          value={formData.username}
-          onChange={handleChange}
-        />
         <input
           type="email"
           placeholder="Email"
@@ -89,12 +80,12 @@ const SignIn = () => {
           disabled={loading}
           className="p-3 text-white uppercase rounded-lg bg-slate-700 hover:opacity-95 disabled:opacity-80"
         >
-          {loading ? "Loading..." : "Sign Up"}
+          {loading ? "Loading..." : "Sign In"}
         </button>
       </form>
 
       <div className="flex gap-2 mt-5">
-        <p>Have't you have account account?</p>
+        <p>Don't have an account?</p>
         <Link to="/sign-up">
           <span className="text-blue-700">Sign Up</span>
         </Link>
