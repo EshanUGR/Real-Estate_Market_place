@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "../redux/user/userSlice.js";
+import OAuth from "../components/OAuth.jsx";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+
+  const [localError, setLocalError] = useState(null);
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.user);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -18,13 +27,12 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    dispatch(signInStart());
+    setLocalError(null);
     setSuccess(null);
 
     if (!formData.email || !formData.password) {
-      setError("All fields are required");
-      setLoading(false);
+      setLocalError("All fields are required");
       return;
     }
 
@@ -38,19 +46,20 @@ const SignIn = () => {
       });
       const data = await res.json();
 
-      if (data.success === false) {
-        setError(data.message);
+      if (!res.ok || data.success === false) {
+        dispatch(signInFailure(data.message || "Sign in failed"));
+        setLocalError(data.message || "Sign in failed");
       } else {
         setSuccess("Sign in successful. Redirecting...");
         setFormData({ email: "", password: "" });
         setTimeout(() => {
-          navigate("/"); // Redirect to the dashboard or another protected route
+          navigate("/");
         }, 2000);
+        dispatch(signInSuccess(data));
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
+      dispatch(signInFailure(err.message));
+      setLocalError("An error occurred. Please try again.");
     }
   };
 
@@ -82,6 +91,8 @@ const SignIn = () => {
         >
           {loading ? "Loading..." : "Sign In"}
         </button>
+
+        <OAuth />
       </form>
 
       <div className="flex gap-2 mt-5">
@@ -91,7 +102,8 @@ const SignIn = () => {
         </Link>
       </div>
 
-      {error && <p className="mt-5 text-red-500">{error}</p>}
+      {localError && <p className="mt-5 text-red-500">{localError}</p>}
+      {error && !localError && <p className="mt-5 text-red-500">{error}</p>}
       {success && <p className="mt-5 text-green-500">{success}</p>}
     </div>
   );
